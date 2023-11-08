@@ -66,6 +66,9 @@ while (transactions > 0)
         testCounter += 1;
     }
 
+    /*
+    This part deliberately produces values that doesn't cover the item cost.
+    */
     int paymentOnes = itemCost % 2;                 // value is 1 when itemCost is odd, value is 0 when itemCost is even
     int paymentFives = (itemCost % 10 > 7) ? 1 : 0; // value is 1 when itemCost ends with 8 or 9, otherwise value is 0
     int paymentTens = (itemCost % 20 > 13) ? 1 : 0; // value is 1 when 13 < itemCost < 20 OR 33 < itemCost < 40, otherwise value is 0
@@ -115,16 +118,22 @@ static void LoadTillEachMorning(int[,] registerDailyStartingCash, int[] cashTill
 
 static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int fives = 0, int ones = 0)
 {
+    int amountPaid = twenties * 20 + tens * 10 + fives * 5 + ones;
+    int changeNeeded = amountPaid - cost;
+    int twentiesBack = 0;
+    int tensBack = 0;
+    int fivesBack = 0;
+    int onesBack = 0;
+
+    if (changeNeeded < 0)
+    {
+        throw new InvalidOperationException("InvalidOperationException: Not enough money provided to complete the transaction.");
+    }
+
     cashTill[3] += twenties;
     cashTill[2] += tens;
     cashTill[1] += fives;
     cashTill[0] += ones;
-
-    int amountPaid = twenties * 20 + tens * 10 + fives * 5 + ones;
-    int changeNeeded = amountPaid - cost;
-
-    if (changeNeeded < 0)
-        throw new InvalidOperationException("InvalidOperationException: Not enough money provided to complete the transaction.");
 
     Console.WriteLine("Cashier prepares the following change:");
 
@@ -133,6 +142,8 @@ static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int
         cashTill[3]--;
         changeNeeded -= 20;
         Console.WriteLine("\t A twenty");
+
+        twentiesBack++;
     }
 
     while ((changeNeeded > 9) && (cashTill[2] > 0))
@@ -140,6 +151,8 @@ static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int
         cashTill[2]--;
         changeNeeded -= 10;
         Console.WriteLine("\t A ten");
+
+        tensBack++;
     }
 
     while ((changeNeeded > 4) && (cashTill[1] > 0))
@@ -147,6 +160,8 @@ static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int
         cashTill[1]--;
         changeNeeded -= 5;
         Console.WriteLine("\t A five");
+
+        fivesBack++;
     }
 
     while ((changeNeeded > 0) && (cashTill[0] > 0))
@@ -154,10 +169,24 @@ static void MakeChange(int cost, int[] cashTill, int twenties, int tens = 0, int
         cashTill[0]--;
         changeNeeded -= 1;
         Console.WriteLine("\t A one");
+
+        onesBack++;
     }
 
     if (changeNeeded > 0)
+    {
+        cashTill[3] += twentiesBack;
+        cashTill[2] += tensBack;
+        cashTill[1] += fivesBack;
+        cashTill[0] += onesBack;
+
+        cashTill[3] -= twenties;
+        cashTill[2] -= tens;
+        cashTill[1] -= fives;
+        cashTill[0] -= ones;
+
         throw new InvalidOperationException("InvalidOperationException: The till is unable to make change for the cash provided.");
+    }
 
 }
 
